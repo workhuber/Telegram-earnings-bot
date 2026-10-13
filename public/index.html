@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ST Coin Earning App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-white font-sans select-none pb-20">
+
+    <!-- Top Header Profile -->
+    <header class="bg-slate-800 p-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-3">
+            <img id="user-avatar" src="https://via.placeholder.com/150" alt="Avatar" class="w-12 h-12 rounded-full border-2 border-emerald-400 object-cover">
+            <div>
+                <h2 id="user-name" class="font-bold text-lg">Loading...</h2>
+                <span class="text-xs text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full">Active Miner</span>
+            </div>
+        </div>
+        <div class="text-right">
+            <span class="text-xs text-slate-400">Status</span>
+            <p class="text-xs font-semibold text-green-400">Online</p>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="p-4 max-w-md mx-auto">
+
+        <!-- 1. HOME SECTION -->
+        <section id="section-home" class="space-y-4">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 rounded-2xl shadow-lg text-center">
+                <span class="text-xs uppercase tracking-wider text-emerald-200">Total Balance</span>
+                <h1 class="text-4xl font-extrabold mt-1"><span id="st-balance">0</span> <span class="text-xl">ST</span></h1>
+                <p class="text-xs text-emerald-100 mt-2">≈ <span id="usdt-value">0.00</span> USDT</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-800 p-4 rounded-xl text-center border border-slate-700">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-2xl mb-1"></i>
+                    <h3 class="text-xl font-bold" id="completed-tasks-count">0</h3>
+                    <p class="text-xs text-slate-400">Completed Tasks</p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl text-center border border-slate-700">
+                    <i class="fa-solid fa-list-clock text-amber-400 text-2xl mb-1"></i>
+                    <h3 class="text-xl font-bold" id="remaining-tasks-count">15</h3>
+                    <p class="text-xs text-slate-400">Remaining Tasks</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. TASK SECTION -->
+        <section id="section-task" class="hidden space-y-4">
+            <!-- Daily Check-in -->
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <h3 class="font-bold text-sm mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-calendar-days text-emerald-400 mr-2"></i> Daily Check-in</span>
+                    <span id="streak-text" class="text-xs text-amber-400">Day 1 Streak</span>
+                </h3>
+                <button onclick="claimDaily()" id="checkin-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg transition text-sm">
+                    Claim Daily Reward (5 ST)
+                </button>
+            </div>
+
+            <!-- Tasks List (15 Tasks) -->
+            <div class="space-y-3">
+                <h3 class="font-bold text-sm text-slate-300">Available Tasks (Watch Ad)</h3>
+                <div id="tasks-container" class="space-y-2">
+                    <!-- Dynamic Tasks will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. WALLET SECTION -->
+        <section id="section-wallet" class="hidden space-y-4">
+            <!-- Swap Section -->
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <h3 class="font-bold text-sm mb-2"><i class="fa-solid fa-right-left text-emerald-400 mr-2"></i> ST to USDT Swap</h3>
+                <p class="text-xs text-slate-400 mb-3">Rate: 1000 ST = 1$ USDT</p>
+                <div class="flex items-center space-x-2">
+                    <input type="number" id="swap-input" placeholder="Enter ST Coin" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                    <button onclick="swapCoins()" class="bg-teal-600 hover:bg-teal-700 px-4 py-2.5 rounded-lg font-bold text-sm whitespace-nowrap">Swap</button>
+                </div>
+            </div>
+
+            <!-- Withdrawal Section -->
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-wallet text-emerald-400 mr-2"></i> Withdraw USDT</h3>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Amount (Min: $1)</label>
+                    <input type="number" id="withdraw-amount" placeholder="1.0" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">BEP-20 Wallet Address</label>
+                    <input type="text" id="withdraw-wallet" placeholder="0x..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <button onclick="requestWithdrawal()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg transition text-sm">
+                    Confirm Withdrawal
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 flex justify-around p-3">
+        <button onclick="switchTab('home')" id="nav-home" class="text-emerald-400 flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-xs font-medium">Home</span>
+        </button>
+        <button onclick="switchTab('task')" id="nav-task" class="text-slate-400 flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-tasks text-lg"></i>
+            <span class="text-xs font-medium">Task</span>
+        </button>
+        <button onclick="switchTab('wallet')" id="nav-wallet" class="text-slate-400 flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-wallet text-lg"></i>
+            <span class="text-xs font-medium">Wallet</span>
+        </button>
+    </nav>
+
+    <!-- Main Logic & Fixed Telegram WebApp Integration Script -->
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Adsterra Smartlink URL
+        const ADSTERRA_SMARTLINK = "https://arwf.org/4/24e70321e19c0844de02b50e23bd7ec5";
+
+        let userData = {
+            username: tg.initDataUnsafe?.user?.username || "CryptoUser",
+            firstName: tg.initDataUnsafe?.user?.first_name || "User",
+            photoUrl: tg.initDataUnsafe?.user?.photo_url || "https://via.placeholder.com/150",
+            stBalance: parseInt(localStorage.getItem('stBalance')) || 0,
+            completedTasks: JSON.parse(localStorage.getItem('completedTasks')) || [],
+            lastCheckIn: localStorage.getItem('lastCheckIn') || null,
+            streak: parseInt(localStorage.getItem('streak')) || 0
+        };
+
+        document.getElementById('user-name').innerText = userData.firstName;
+        if(userData.photoUrl) document.getElementById('user-avatar').src = userData.photoUrl;
+
+        updateUI();
+
+        function updateUI() {
+            document.getElementById('st-balance').innerText = userData.stBalance;
+            document.getElementById('usdt-value').innerText = (userData.stBalance / 1000).toFixed(2);
+            document.getElementById('completed-tasks-count').innerText = userData.completedTasks.length;
+            document.getElementById('remaining-tasks-count').innerText = 15 - userData.completedTasks.length;
+            
+            localStorage.setItem('stBalance', userData.stBalance);
+            localStorage.setItem('completedTasks', JSON.stringify(userData.completedTasks));
+            localStorage.setItem('streak', userData.streak);
+
+            renderTasks();
+        }
+
+        // Tab Switching Logic
+        function switchTab(tab) {
+            ['home', 'task', 'wallet'].forEach(t => {
+                document.getElementById(`section-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).classList.remove('text-emerald-400');
+                document.getElementById(`nav-${t}`).classList.add('text-slate-400');
+            });
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            document.getElementById(`nav-${tab}`).classList.add('text-emerald-400');
+            document.getElementById(`nav-${tab}`).classList.remove('text-slate-400');
+        }
+
+        // Daily Check-in Logic
+        function claimDaily() {
+            const today = new Date().toDateString();
+            if (userData.lastCheckIn === today) {
+                tg.showAlert("You have already checked in today!");
+                return;
+            }
+
+            userData.streak = (userData.streak % 7) + 1;
+            let reward = userData.streak * 5;
+
+            userData.stBalance += reward;
+            userData.lastCheckIn = today;
+            localStorage.setItem('lastCheckIn', today);
+            
+            tg.showAlert(`Successfully claimed ${reward} ST coins!`);
+            updateUI();
+        }
+
+        // Render 15 Tasks
+        function renderTasks() {
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= 15; i++) {
+                const isCompleted = userData.completedTasks.includes(i);
+                container.innerHTML += `
+                    <div class="bg-slate-900 p-3 rounded-lg flex items-center justify-between border border-slate-800">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-slate-800 p-2 rounded-lg text-emerald-400"><i class="fa-solid fa-play"></i></div>
+                            <div>
+                                <h4 class="text-xs font-bold">Ad Task #${i}</h4>
+                                <span class="text-[10px] text-slate-400">Watch Ad & Earn 5 ST</span>
+                            </div>
+                        </div>
+                        <button onclick="startAdTask(${i})" ${isCompleted ? 'disabled' : ''} class="${isCompleted ? 'bg-slate-700 text-slate-500' : 'bg-emerald-500 hover:bg-emerald-600 text-slate-950'} px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                            ${isCompleted ? 'Completed' : 'Watch Ad'}
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Fixed Adsterra Task Logic for Telegram In-App Browser
+        function startAdTask(taskId) {
+            // Telegram WebApp API দিয়ে এক্সটার্নাল ব্রাউজারে স্মার্টলিংক ওপেন করা
+            if (tg.openLink) {
+                tg.openLink(ADSTERRA_SMARTLINK);
+            } else {
+                window.open(ADSTERRA_SMARTLINK, '_blank');
+            }
+
+            // ১০ সেকেন্ডের টাইমার সেট করা
+            setTimeout(() => {
+                if (!userData.completedTasks.includes(taskId)) {
+                    userData.stBalance += 5;
+                    userData.completedTasks.push(taskId);
+                    updateUI();
+                    tg.showAlert("Congratulations! 5 ST coins added to your balance for watching the ad.");
+                }
+            }, 10000);
+        }
+
+        // Swap Logic (1000 ST = 1$)
+        function swapCoins() {
+            let amount = parseInt(document.getElementById('swap-input').value);
+            if (!amount || amount < 1000) {
+                tg.showAlert("Minimum swap amount is 1000 ST!");
+                return;
+            }
+            if (amount > userData.stBalance) {
+                tg.showAlert("Insufficient ST balance!");
+                return;
+            }
+
+            userData.stBalance -= amount;
+            let usdtEarned = amount / 1000;
+            updateUI();
+            tg.showAlert(`Successfully swapped ${amount} ST to $${usdtEarned} USDT!`);
+            document.getElementById('swap-input').value = '';
+        }
+
+        // Withdrawal Request Logic
+        function requestWithdrawal() {
+            let amount = parseFloat(document.getElementById('withdraw-amount').value);
+            let wallet = document.getElementById('withdraw-wallet').value.trim();
+
+            if (!amount || amount < 1) {
+                tg.showAlert("Minimum withdrawal is $1!");
+                return;
+            }
+            if (!wallet.startsWith('0x') || wallet.length < 42) {
+                tg.showAlert("Please enter a valid BEP-20 wallet address!");
+                return;
+            }
+
+            fetch('/api/withdraw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: userData.username,
+                    amount: amount,
+                    wallet: wallet
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    tg.showAlert("Withdrawal request submitted successfully! Admin will review shortly.");
+                    document.getElementById('withdraw-amount').value = '';
+                    document.getElementById('withdraw-wallet').value = '';
+                } else {
+                    tg.showAlert("Failed to submit request.");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                tg.showAlert("Server error!");
+            });
+        }
+    </script>
+</body>
+</html>
