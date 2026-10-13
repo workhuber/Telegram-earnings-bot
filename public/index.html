@@ -26,7 +26,7 @@
     </header>
 
     <!-- MAIN CONTAINER -->
-    <main class="p-4 max-w-md mx-auto">
+    <main class="p-4 max-w-md mx-auto space-y-4">
 
         <!-- 1. HOME SECTION -->
         <section id="section-home" class="space-y-4">
@@ -46,6 +46,21 @@
                     <i class="fa-solid fa-list-clock text-amber-400 text-2xl mb-1"></i>
                     <h3 class="text-xl font-bold" id="remaining-tasks-count">15</h3>
                     <p class="text-xs text-slate-400">Remaining Tasks</p>
+                </div>
+            </div>
+
+            <!-- Referral Box inside Home -->
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                <h3 class="font-bold text-sm flex items-center text-emerald-400">
+                    <i class="fa-solid fa-user-plus mr-2"></i> Invite Friends & Earn
+                </h3>
+                <p class="text-xs text-slate-400">Get 50 ST coins for every friend who joins using your link!</p>
+                
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="refer-link" readonly class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-300 focus:outline-none" value="Loading link...">
+                    <button onclick="copyReferralLink()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs whitespace-nowrap">
+                        Copy
+                    </button>
                 </div>
             </div>
         </section>
@@ -119,14 +134,15 @@
         </button>
     </nav>
 
-    <!-- Main Logic & Fixed Telegram WebApp Integration Script -->
+    <!-- Script Section -->
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Adsterra Smartlink URL
         const ADSTERRA_SMARTLINK = "https://arwf.org/4/24e70321e19c0844de02b50e23bd7ec5";
+        const botUsername = "st_coin_earn_bot"; // আপনার বটের ইউজারনেম
 
+        let userId = tg.initDataUnsafe?.user?.id || "123456";
         let userData = {
             username: tg.initDataUnsafe?.user?.username || "CryptoUser",
             firstName: tg.initDataUnsafe?.user?.first_name || "User",
@@ -140,6 +156,10 @@
         document.getElementById('user-name').innerText = userData.firstName;
         if(userData.photoUrl) document.getElementById('user-avatar').src = userData.photoUrl;
 
+        // Generate Referral Link
+        let refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
+        document.getElementById('refer-link').value = refLink;
+
         updateUI();
 
         function updateUI() {
@@ -147,12 +167,21 @@
             document.getElementById('usdt-value').innerText = (userData.stBalance / 1000).toFixed(2);
             document.getElementById('completed-tasks-count').innerText = userData.completedTasks.length;
             document.getElementById('remaining-tasks-count').innerText = 15 - userData.completedTasks.length;
-            
+
             localStorage.setItem('stBalance', userData.stBalance);
             localStorage.setItem('completedTasks', JSON.stringify(userData.completedTasks));
             localStorage.setItem('streak', userData.streak);
 
             renderTasks();
+        }
+
+        // Copy Referral Link
+        function copyReferralLink() {
+            let copyText = document.getElementById('refer-link');
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            tg.showAlert("Referral link copied to clipboard!");
         }
 
         // Tab Switching Logic
@@ -210,16 +239,14 @@
             }
         }
 
-        // Fixed Adsterra Task Logic for Telegram In-App Browser
+        // Adsterra Smartlink Task Logic
         function startAdTask(taskId) {
-            // Telegram WebApp API দিয়ে এক্সটার্নাল ব্রাউজারে স্মার্টলিংক ওপেন করা
             if (tg.openLink) {
                 tg.openLink(ADSTERRA_SMARTLINK);
             } else {
                 window.open(ADSTERRA_SMARTLINK, '_blank');
             }
 
-            // ১০ সেকেন্ডের টাইমার সেট করা
             setTimeout(() => {
                 if (!userData.completedTasks.includes(taskId)) {
                     userData.stBalance += 5;
@@ -230,7 +257,7 @@
             }, 10000);
         }
 
-        // Swap Logic (1000 ST = 1$)
+        // Swap Logic
         function swapCoins() {
             let amount = parseInt(document.getElementById('swap-input').value);
             if (!amount || amount < 1000) {
@@ -245,7 +272,7 @@
             userData.stBalance -= amount;
             let usdtEarned = amount / 1000;
             updateUI();
-            tg.showAlert(`Successfully swapped ${amount} ST to $${usdtEarned} USDT!`);
+            tg.showAlert(`Successfully swapped ${amount} ST to$${usdtEarned} USDT!`);
             document.getElementById('swap-input').value = '';
         }
 
