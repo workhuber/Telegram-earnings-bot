@@ -119,10 +119,13 @@
         </button>
     </nav>
 
-    <!-- Main Logic & Adsterra Integration Script -->
+    <!-- Main Logic & Adsterra Smartlink Integration Script -->
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+
+        // Adsterra Smartlink URL
+        const ADSTERRA_SMARTLINK = "https://arwf.org/4/24e70321e19c0844de02b50e23bd7ec5";
 
         let userData = {
             username: tg.initDataUnsafe?.user?.username || "CryptoUser",
@@ -207,82 +210,35 @@
             }
         }
 
-        // Adsterra Ad Task Logic
+        // Adsterra Smartlink Task Logic
         function startAdTask(taskId) {
-            let confirmWatch = confirm("You are about to watch an ad task. Click OK to view the ad and earn 5 ST coins.");
+            let confirmWatch = confirm("You are about to watch an ad task. Please stay on the ad page for 10 seconds to earn 5 ST coins.");
             if (!confirmWatch) {
-                alert("Task cancelled!");
+                alert("Task cancelled! You must complete the ad to earn points.");
                 return;
             }
 
-            let adWindow = window.open('', '_blank', 'width=600,height=600');
-            
-            if (!adWindow) {
-                alert("Please allow pop-ups in your browser to view the ad!");
-                return;
-            }
+            // Open Adsterra Smartlink in a new tab
+            window.open(ADSTERRA_SMARTLINK, '_blank');
 
-            adWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Watching Ad - ST Coin</title>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>
-                        body { background: #0f172a; color: white; font-family: sans-serif; text-align: center; padding: 30px 15px; margin: 0; }
-                        #timer { font-size: 20px; color: #34d399; margin: 20px 0; font-weight: bold; }
-                        #claim-btn { display: none; background: #10b981; color: #020617; padding: 12px 24px; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 15px; }
-                        .ad-container { margin: 20px auto; min-height: 250px; background: #1e293b; border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-center; }
-                    </style>
-                </head>
-                <body>
-                    <h2>Watch the Ad below completely!</h2>
-                    
-                    <div class="ad-container">
-                        <!-- Adsterra Script Code -->
-                        <script data-cfasync="false" src="https://bicea.org/14/f9f1cd49c38df379e5b320c0f1e16e9d"><\/script>
-                    </div>
+            // Show timer alert and reward user after verification
+            let secondsLeft = 10;
+            alert("Ad opened! Please view the ad page. Points will be added in 10 seconds.");
 
-                    <div id="timer">Ad loaded! Please wait <span id="countdown">10</span> seconds...</div>
-                    <button id="claim-btn" onclick="finishTask()">Claim 5 ST Coins</button>
-
-                    <script>
-                        let timeLeft = 10;
-                        let countdownTimer = setInterval(function() {
-                            timeLeft--;
-                            document.getElementById('countdown').innerText = timeLeft;
-                            if (timeLeft <= 0) {
-                                clearInterval(countdownTimer);
-                                document.getElementById('timer').style.display = 'none';
-                                document.getElementById('claim-btn').style.display = 'inline-block';
-                            }
-                        }, 1000);
-
-                        function finishTask() {
-                            if (window.opener) {
-                                window.opener.postMessage({ type: 'AD_COMPLETED', taskId: ${taskId} }, '*');
-                            }
-                            alert('Reward unlocked! Returning to Mini App...');
-                            window.close();
-                        }
-                    <\/script>
-                </body>
-                </html>
-            `);
-        }
-
-        // Receive Completion Message
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'AD_COMPLETED') {
-                let taskId = event.data.taskId;
-                if (!userData.completedTasks.includes(taskId)) {
-                    userData.stBalance += 5;
-                    userData.completedTasks.push(taskId);
-                    updateUI();
-                    alert("Congratulations! 5 ST coins added to your balance.");
+            setTimeout(() => {
+                let isCompleted = confirm("Did you watch the full ad page?");
+                if (isCompleted) {
+                    if (!userData.completedTasks.includes(taskId)) {
+                        userData.stBalance += 5;
+                        userData.completedTasks.push(taskId);
+                        updateUI();
+                        alert("Congratulations! 5 ST coins added to your balance.");
+                    }
+                } else {
+                    alert("Task not completed! You must stay on the ad page to earn rewards.");
                 }
-            }
-        });
+            }, 10000);
+        }
 
         // Swap Logic (1000 ST = 1$)
         function swapCoins() {
